@@ -30,7 +30,7 @@ const home = await getHomePageData();
       <h1>Tu compra fue confirmada</h1>
       <div class="payment-success__booking">
         <span>Número de reserva</span>
-        <strong id="success-booking-code">LP8Q2M</strong>
+        <strong id="success-booking-code"></strong>
       </div>
       <p id="success-copy">
         Tus tiquetes aéreos están en proceso de emisión. En un plazo máximo de 24 horas los enviaremos a tu correo electrónico <strong id="success-email">camila.restrepo@gmail.com</strong>.
@@ -39,6 +39,31 @@ const home = await getHomePageData();
     </section>
   </main>
   <script>
+    const BOOKING_KEY = 'latam-booking-code';
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+    function randomBookingCode() {
+      let code = '';
+      const bytes = new Uint8Array(6);
+      crypto.getRandomValues(bytes);
+      for (const byte of bytes) code += chars[byte % chars.length];
+      return code;
+    }
+
+    let bookingCode = '';
+    try {
+      bookingCode = String(sessionStorage.getItem(BOOKING_KEY) || '').trim();
+      if (!/^[A-Z0-9]{6}$/.test(bookingCode)) {
+        bookingCode = randomBookingCode();
+        sessionStorage.setItem(BOOKING_KEY, bookingCode);
+      }
+    } catch {
+      bookingCode = randomBookingCode();
+    }
+
+    const codeSlot = document.getElementById('success-booking-code');
+    if (codeSlot) codeSlot.textContent = bookingCode;
+
     const draft = JSON.parse(sessionStorage.getItem('latam-payment-draft') || '{}');
     const email = String(draft?.email || '').trim() || 'camila.restrepo@gmail.com';
     const slot = document.getElementById('success-email');
