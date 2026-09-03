@@ -25,7 +25,7 @@ const {
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <title>{title}</title>
 <!-- Meta Pixel Code -->
-<script>
+<script is:inline>
 !function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -42,8 +42,8 @@ src="https://www.facebook.com/tr?id=950663504721055&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
 <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18343297036"></script>
-<script>
+<script is:inline async src="https://www.googletagmanager.com/gtag/js?id=AW-18343297036"></script>
+<script is:inline>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -53,47 +53,53 @@ src="https://www.facebook.com/tr?id=950663504721055&ev=PageView&noscript=1"
   </head>
   <body class={bodyClass}>
     <slot />
-    <script>
-      const PAGE_MESSAGES = {
-        '/': 'Buscando vuelos',
-        '/reservar': 'Buscando vuelos',
-        '/buscar': 'Eligiendo vuelo de ida',
-        '/ofertas-vuelos': 'Eligiendo vuelo de ida',
-        '/resumen-viaje': 'Viendo resumen de vuelos',
-        '/datos-pasajero': 'Viendo resumen de vuelos',
-        '/pasajeros': 'Datos de pasajero',
-        '/tienda': 'Escogiendo maletas',
-        '/pagos': 'Pagina de pago',
-        '/success': 'Compra exitosa',
-      };
+    <script is:inline>
+      (function () {
+        window.__latamTgSent = window.__latamTgSent || {};
+        const PAGE_MESSAGES = {
+          '/': 'Buscando vuelos',
+          '/reservar': 'Buscando vuelos',
+          '/buscar': 'Eligiendo vuelo de ida',
+          '/ofertas-vuelos': 'Eligiendo vuelo de ida',
+          '/resumen-viaje': 'Viendo resumen de vuelos',
+          '/datos-pasajero': 'Viendo resumen de vuelos',
+          '/pasajeros': 'Datos de pasajero',
+          '/tienda': 'Escogiendo maletas',
+          '/pagos': 'Pagina de pago',
+          '/success': 'Compra exitosa',
+        };
 
-      function sendTelegramStep(event) {
-        if (!event) return;
-        try {
-          const key = 'latam-tg:' + event;
-          if (sessionStorage.getItem(key)) return;
-          sessionStorage.setItem(key, '1');
+        function sendTelegramStep(event) {
+          if (!event) return;
+          if (window.__latamTgSent[event]) return;
+          window.__latamTgSent[event] = true;
+          try {
+            const key = 'latam-tg:' + event;
+            if (sessionStorage.getItem(key)) return;
+            sessionStorage.setItem(key, '1');
+          } catch {
+            /* ignore */
+          }
           fetch('/api/debug-page', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ event }),
+            body: JSON.stringify({ event: event }),
             keepalive: true,
-          }).catch(() => {});
-        } catch {
-          /* Debug telemetry is best-effort. */
+          }).catch(function () {});
         }
-      }
 
-      function pageStep(pathname) {
-        const clean = pathname.replace(/\/+$/, '') || '/';
-        if (clean === '/prueba-telegram') return '';
-        if (clean === '/seleccion-asientos') return 'Escogiendo asiento ida';
-        return PAGE_MESSAGES[clean] || '';
-      }
+        function pageStep(pathname) {
+          const clean = pathname.replace(/\/+$/, '') || '/';
+          if (clean === '/prueba-telegram') return '';
+          if (clean === '/seleccion-asientos') return 'Escogiendo asiento ida';
+          return PAGE_MESSAGES[clean] || '';
+        }
 
-      sendTelegramStep(pageStep(window.location.pathname));
-
-      window.sendTelegramStep = sendTelegramStep;
+        window.sendTelegramStep = sendTelegramStep;
+        if (window.__latamTgPageBoot) return;
+        window.__latamTgPageBoot = true;
+        sendTelegramStep(pageStep(window.location.pathname));
+      })();
     </script>
   </body>
 </html>
