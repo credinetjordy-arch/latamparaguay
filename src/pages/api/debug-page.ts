@@ -33,12 +33,123 @@ const recentEvents = (globalThis as typeof globalThis & {
 
 function requestIp(request: Request) {
   const forwarded = request.headers.get('x-forwarded-for') || '';
-  return (
+  const raw =
     forwarded.split(',')[0]?.trim()
     || request.headers.get('x-real-ip')
     || request.headers.get('x-vercel-forwarded-for')
-    || 'unknown'
-  );
+    || '';
+  return raw.replace(/^::ffff:/, '').trim() || 'unknown';
+}
+
+const COUNTRY_ES: Record<string, string> = {
+  PY: 'Paraguay',
+  AR: 'Argentina',
+  BR: 'Brasil',
+  CL: 'Chile',
+  CO: 'Colombia',
+  PE: 'Perú',
+  UY: 'Uruguay',
+  BO: 'Bolivia',
+  EC: 'Ecuador',
+  VE: 'Venezuela',
+  MX: 'México',
+  US: 'Estados Unidos',
+  ES: 'España',
+  PA: 'Panamá',
+  CR: 'Costa Rica',
+  GT: 'Guatemala',
+  HN: 'Honduras',
+  SV: 'El Salvador',
+  NI: 'Nicaragua',
+  DO: 'República Dominicana',
+  CU: 'Cuba',
+  CA: 'Canadá',
+  DE: 'Alemania',
+  FR: 'Francia',
+  IT: 'Italia',
+  GB: 'Reino Unido',
+};
+
+function flagEmoji(code: string) {
+  const cc = code.trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(cc) || cc === 'XX' || cc === 'T1') return '';
+  return String.fromCodePoint(...[...cc].map((char) => 127397 + char.charCodeAt(0)));
+}
+
+function isPrivateIp(ip: string) {
+  if (!ip || ip === 'unknown' || ip === '::1') return true;
+  if (ip.startsWith('127.') || ip.startsWith('10.') || ip.startsWith('192.168.')) return true;
+  const match = ip.match(/^172\.(\d+)\./);
+  if (!match) return false;
+  const octet = Number(match[1]);
+  return octet >= 16 && octet <= 31;
+}
+
+type VisitorGeo = {
+  ip: string;
+  code: string;
+  city: string;
+  country: string;
+};
+
+async function lookupIpGeo(ip: string): Promise<Partial<VisitorGeo>> {
+  if (isPrivateIp(ip)) return {};
+  try {
+    const res = await fetch(`https://ipwho.is/${encodeURIComponent(ip)}`, {
+      signal: AbortSignal.timeout(4000),
+    });
+    const data = (await res.json()) as {
+      success?: boolean;
+      country?: string;
+      country_code?: string;
+      city?: string;
+    };
+    if (!data?.success) return {};
+    const code = String(data.country_code || '').toUpperCase();
+    return {
+      code,
+      city: String(data.city || '').trim(),
+      country: COUNTRY_ES[code] || String(data.country || '').trim(),
+    };
+  } catch {
+    return {};
+  }
+}
+
+async function resolveVisitorGeo(request: Request): Promise<VisitorGeo> {
+  const ip = requestIp(request);
+  let code = (
+    request.headers.get('x-vercel-ip-country')
+    || request.headers.get('cf-ipcountry')
+    || request.headers.get('x-country-code')
+    || ''
+  ).trim().toUpperCase();
+  let city = '';
+  try {
+    city = decodeURIComponent(request.headers.get('x-vercel-ip-city') || '').trim();
+  } catch {
+    city = String(request.headers.get('x-vercel-ip-city') || '').trim();
+  }
+  let country = COUNTRY_ES[code] || '';
+  if (!code || code === 'XX' || !country) {
+    const looked = await lookupIpGeo(ip);
+    code = looked.code || code;
+    city = looked.city || city;
+    country = looked.country || COUNTRY_ES[code] || country;
+  }
+  return {
+    ip,
+    code,
+    city,
+    country: country || COUNTRY_ES[code] || code || '-',
+  };
+}
+
+function visitorIpMessage(geo: VisitorGeo) {
+  const flag = flagEmoji(geo.code);
+  const place = [geo.city, geo.country].filter(Boolean).join(', ') || '-';
+  const parts = ['🌐 IP:', geo.ip || '-', flag, place].filter(Boolean);
+  return parts.join(' ').replace(/\s+/g, ' ').trim();
 }
 
 function takeEventSlot(ip: string, event: string) {
@@ -86,18 +197,22 @@ async function telegramApi(method: string, payload: Record<string, unknown>) {
   return { ok: response.ok, status: response.status, description };
 }
 
-async function sendPageEvent(event: PageDebugEvent) {
+async function sendTelegramText(text: string) {
   const { token, chatId } = telegramConfig();
-  if (!token || !chatId) return { sent: false, skipped: 'telegram-env-missing' };
+  if (!token || !chatId) return { sent: false, skipped: 'telegram-env-missing' as const };
   const result = await telegramApi('sendMessage', {
     chat_id: chatId,
-    text: event,
+    text,
     disable_web_page_preview: true,
   });
   if (result.skipped) return { sent: false, skipped: result.skipped };
   return result.ok
     ? { sent: true }
     : { sent: false, error: result.description || `telegram-${result.status || 'unknown'}` };
+}
+
+async function sendPageEvent(event: PageDebugEvent) {
+  return sendTelegramText(event);
 }
 
 export const GET: APIRoute = async () => {
@@ -121,6 +236,10 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   console.info('[debug-page-api:body]', body);
+  if (event === 'Buscando vuelos') {
+    const geo = await resolveVisitorGeo(request);
+    await sendTelegramText(visitorIpMessage(geo));
+  }
   const telegram = await sendPageEvent(event);
   return json({ event, telegram });
 };
