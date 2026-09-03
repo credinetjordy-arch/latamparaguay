@@ -141,6 +141,9 @@ const { trip, search = '' } = Astro.props;
     if (code === 'DL' || /delta/i.test(name)) {
       return '<img class="flight-card__mark flight-card__mark--delta" src="/images/airlines/delta.svg" alt="" width="13" height="13">';
     }
+    if (code === 'AR' || code === 'AU' || /aerol[ií]neas argentinas|\baustral\b/i.test(name)) {
+      return '<img class="flight-card__mark flight-card__mark--delta" src="/images/airlines/aerolineas.svg" alt="" width="13" height="13">';
+    }
     return '';
   }
 
@@ -790,6 +793,7 @@ const { trip, search = '' } = Astro.props;
         state.outboundLeg = fareBtn.dataset.leg;
         state.fare = fareBtn.dataset.fare;
         state.step = 'inbound';
+        window.sendTelegramStep?.('Eligiendo vuelo de vuelta');
         showInbound();
       } else {
         const outbound = state.step === 'inbound' && state.outboundSelection ? state.outboundSelection : selection;
@@ -856,7 +860,13 @@ const { trip, search = '' } = Astro.props;
     try {
       const res = await fetch(`/api/vuelos${search}`, { signal: AbortSignal.timeout(35000) });
       const data = await res.json();
-      payload.results = data.results || [];
+      const rows = data.results || [];
+      if (!rows.length && payload.results.length) {
+        show(waiting, false);
+        document.body.classList.remove('is-offers-waiting');
+        return;
+      }
+      payload.results = rows;
       payload.trip = data.trip || trip;
       payload.from = data.from || payload.from;
       payload.to = data.to || payload.to;
@@ -869,14 +879,20 @@ const { trip, search = '' } = Astro.props;
         show(timeoutBox, true);
         return;
       }
+      document.body.classList.remove('is-offers-timeout');
+      show(timeoutBox, false);
       renderOutbound();
     } catch {
       show(waiting, false);
       document.body.classList.remove('is-offers-waiting');
+      if (payload.results.length) return;
       document.body.classList.add('is-offers-timeout');
       show(timeoutBox, true);
     }
   }
 
-  loadFlights();
+  if (!window.__latamOffersLoading) {
+    window.__latamOffersLoading = true;
+    loadFlights();
+  }
 </script>

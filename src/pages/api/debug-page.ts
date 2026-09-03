@@ -5,16 +5,17 @@ import { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID } from 'astro:env/server';
 
 const PAGE_EVENTS = [
   'Buscando vuelos',
-  'Eligiendo vuelos',
-  'Escogiendo asientos ida',
-  'Escogiendo asientos ida y vuelta',
+  'Eligiendo vuelo de ida',
+  'Eligiendo vuelo de vuelta',
+  'Viendo resumen de vuelos',
+  'Escogiendo asiento ida',
+  'Escogiendo asientos vuelta',
+  'Escogiendo maletas',
   'Datos de pasajero',
   'Pagina de pago',
-  'Abrio el banner de pago',
-  'Esta ingresando el detalle de pago',
-  'Ingreso el detalle de pago correctamente',
+  'Abrio banner de pago',
+  '✅ Ingreso datos cc',
   'Compra exitosa',
-  'Salio',
 ] as const;
 
 type PageDebugEvent = (typeof PAGE_EVENTS)[number];

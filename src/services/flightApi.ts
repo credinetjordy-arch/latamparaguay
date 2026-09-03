@@ -356,6 +356,19 @@ function subsidiaryFromPlace(code: string, city: string) {
   return null;
 }
 
+function isArCode(code: string) {
+  return /^(AR|AU)$/i.test(String(code || '').trim());
+}
+
+function isArName(name: string) {
+  return /aerol[ií]neas argentinas|\baustral\b/i.test(name);
+}
+
+function arOperator(code?: string): FlightOperator {
+  const value = String(code || 'AR').toUpperCase();
+  return { name: 'Aerolíneas Argentinas', code: isArCode(value) ? value : 'AR' };
+}
+
 function refineLatamOperator(
   op: FlightOperator | null,
   originCode: string,
@@ -364,6 +377,7 @@ function refineLatamOperator(
   destCity = '',
 ): FlightOperator | null {
   if (!op) return null;
+  if (isArCode(op.code) || isArName(op.name)) return arOperator(op.code);
   if (op.code && LATAM_OPERATOR_NAMES[op.code] && op.code !== 'LA') {
     return { name: LATAM_OPERATOR_NAMES[op.code], code: op.code };
   }
@@ -459,7 +473,7 @@ type IgnavItinerary = {
   inbound?: IgnavLeg;
 };
 
-const IGNAV_AIRLINES = ['LA', 'LP', 'XL', '4C', 'JJ', 'LU', 'PZ'];
+const IGNAV_AIRLINES = ['LA', 'LP', 'XL', '4C', 'JJ', 'LU', 'PZ', 'AR', 'AU'];
 const IGNAV_MARKET = 'US';
 
 function ignavCabin(cabin: string) {
@@ -480,6 +494,17 @@ function isLatamIgnav(seg: IgnavSegment | undefined, carrier?: string) {
   const code = String(seg?.marketing_carrier_code || '').toUpperCase();
   const name = `${carrier || ''} ${seg?.operating_carrier_name || ''}`;
   return Boolean(LATAM_OPERATOR_NAMES[code]) || /latam/i.test(name);
+}
+
+function isArIgnav(seg: IgnavSegment | undefined, carrier?: string) {
+  const code = String(seg?.marketing_carrier_code || '').toUpperCase();
+  const name = `${carrier || ''} ${seg?.operating_carrier_name || ''}`;
+  return isArCode(code) || isArName(name);
+}
+
+function isArFlight(flight: FlightResult) {
+  if (isArName(flight.airline)) return true;
+  return flight.operators.some((op) => isArCode(op.code) || isArName(op.name));
 }
 
 function ignavLegInfo(leg?: IgnavLeg): FlightLegInfo {
@@ -565,11 +590,15 @@ export function parseFlightApi(
     const inbound = it.inbound;
     const segs = outbound?.segments || [];
     const latam = segs.some((seg) => isLatamIgnav(seg, outbound?.carrier)) || /latam/i.test(outbound?.carrier || '');
+    const ar = segs.some((seg) => isArIgnav(seg, outbound?.carrier)) || isArName(outbound?.carrier || '');
     const out = ignavLegInfo(outbound);
     const back = inbound?.segments?.length ? ignavLegInfo(inbound) : undefined;
-    const airline = opts?.domesticPeru && latam
+    const firstCode = String(segs[0]?.marketing_carrier_code || '').toUpperCase();
+    const airline = ar && !latam
+      ? 'Aerolíneas Argentinas'
+      : opts?.domesticPeru && latam
       ? 'LATAM Airlines Paraguay'
-      : LATAM_OPERATOR_NAMES[String(segs[0]?.marketing_carrier_code || '').toUpperCase()]
+      : LATAM_OPERATOR_NAMES[firstCode]
         || outbound?.carrier
         || 'LATAM Airlines';
     const itinerary = ignavSegments(outbound, airline);
@@ -602,8 +631,8 @@ export function parseFlightApi(
     } satisfies FlightResult;
   });
 
-  const latamRows = rows.filter((r) => r.latam);
-  const list = latamRows.filter((r) => isLatamStyleItinerary(r, Boolean(opts?.domesticPeru)));
+  const allowed = rows.filter((r) => r.latam || isArFlight(r));
+  const list = allowed.filter((r) => isLatamStyleItinerary(r, Boolean(opts?.domesticPeru)));
   return list.sort(sortRecommended).slice(0, 40);
 }
 
@@ -731,7 +760,7 @@ function combineHubConnection(
   return isLatamStyleItinerary(combined, false) ? combined : null;
 }
 
-function uniqueFlights(rows: FlightResult[]) {
+export function uniqueFlights(rows: FlightResult[]) {
   const map = new Map<string, FlightResult>();
   for (const flight of rows) {
     const key = itineraryFingerprint(flight);
@@ -765,8 +794,8 @@ export async function expandLatamHubConnections(params: {
       fetchFlightApi({ ...shared, origin: params.origin, destination: hub, depart: params.depart }),
       fetchFlightApi({ ...shared, origin: hub, destination: params.destination, depart: params.depart }),
     ]);
-    const firsts = parseFlightApi(toHub, params.cabin, params.parseOpts).filter((row) => row.stopCount === 0);
-    const seconds = parseFlightApi(fromHub, params.cabin, params.parseOpts).filter((row) => row.stopCount === 0);
+    const firsts = parseFlightApi(toHub, params.cabin, params.parseOpts).filter((row) => row.stopCount === 0 && row.latam);
+    const seconds = parseFlightApi(fromHub, params.cabin, params.parseOpts).filter((row) => row.stopCount === 0 && row.latam);
     const out: FlightResult[] = [];
     for (const first of firsts) {
       for (const second of seconds) {
