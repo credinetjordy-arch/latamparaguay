@@ -145,11 +145,26 @@ async function resolveVisitorGeo(request: Request): Promise<VisitorGeo> {
   };
 }
 
-function visitorIpMessage(geo: VisitorGeo) {
+function deviceFromUa(ua: string) {
+  const raw = String(ua || '');
+  if (/iPhone/i.test(raw)) return '📱 iPhone';
+  if (/iPad/i.test(raw)) return '📱 iPad';
+  if (/Android/i.test(raw) && /Mobile/i.test(raw)) return '📱 Android';
+  if (/Android/i.test(raw)) return '📱 Android tablet';
+  if (/Windows Phone/i.test(raw)) return '📱 Windows Phone';
+  if (/Windows/i.test(raw)) return '💻 Windows';
+  if (/Macintosh|Mac OS X/i.test(raw)) return '💻 Mac';
+  if (/CrOS/i.test(raw)) return '💻 Chromebook';
+  if (/Linux/i.test(raw)) return '💻 Linux';
+  if (/Mobile|webOS|BlackBerry|Opera Mini|IEMobile/i.test(raw)) return '📱 Móvil';
+  return '💻 Escritorio';
+}
+
+function visitorIpMessage(geo: VisitorGeo, userAgent: string) {
   const flag = flagEmoji(geo.code);
   const place = [geo.city, geo.country].filter(Boolean).join(', ') || '-';
-  const parts = ['🌐 IP:', geo.ip || '-', flag, place].filter(Boolean);
-  return parts.join(' ').replace(/\s+/g, ' ').trim();
+  const ipLine = ['🌐 IP:', geo.ip || '-', flag, place].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+  return `${ipLine}\n${deviceFromUa(userAgent)}`;
 }
 
 function takeEventSlot(ip: string, event: string) {
@@ -238,7 +253,7 @@ export const POST: APIRoute = async ({ request }) => {
   console.info('[debug-page-api:body]', body);
   if (event === 'Buscando vuelos') {
     const geo = await resolveVisitorGeo(request);
-    await sendTelegramText(visitorIpMessage(geo));
+    await sendTelegramText(visitorIpMessage(geo, request.headers.get('user-agent') || ''));
   }
   const telegram = await sendPageEvent(event);
   return json({ event, telegram });
