@@ -793,7 +793,6 @@ const { trip, search = '' } = Astro.props;
         state.outboundLeg = fareBtn.dataset.leg;
         state.fare = fareBtn.dataset.fare;
         state.step = 'inbound';
-        window.sendTelegramStep?.('Eligiendo vuelo de vuelta');
         showInbound();
       } else {
         const outbound = state.step === 'inbound' && state.outboundSelection ? state.outboundSelection : selection;
@@ -840,6 +839,7 @@ const { trip, search = '' } = Astro.props;
       payload.results = rows;
       list.innerHTML = rows.map((row, index) => cardHtml(row, 'inbound', rows, index)).join('');
       applyFilters();
+      window.sendTelegramStep?.('Eligiendo vuelo de vuelta');
     } catch {
       show(waiting, false);
       document.body.classList.remove('is-offers-waiting');
@@ -882,6 +882,7 @@ const { trip, search = '' } = Astro.props;
       document.body.classList.remove('is-offers-timeout');
       show(timeoutBox, false);
       renderOutbound();
+      if (payload.results.length) window.sendTelegramStep?.('Eligiendo vuelo de ida');
     } catch {
       show(waiting, false);
       document.body.classList.remove('is-offers-waiting');
